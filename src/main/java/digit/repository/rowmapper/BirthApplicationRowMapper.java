@@ -1,6 +1,7 @@
 package digit.repository.rowmapper;
 
 import digit.web.models.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Component;
@@ -13,57 +14,65 @@ import java.util.List;
 import java.util.Map;
 
 @Component
+@Slf4j
 public class BirthApplicationRowMapper implements ResultSetExtractor<List<BirthRegistrationApplication>> {
-    public List<BirthRegistrationApplication> extractData(ResultSet rs) throws SQLException, DataAccessException {
-        Map<String,BirthRegistrationApplication> birthRegistrationApplicationMap = new LinkedHashMap<>();
-        System.out.println(rs);
+    public List<BirthRegistrationApplication> extractData(ResultSet rs) {
+        Map<String, BirthRegistrationApplication> birthRegistrationApplicationMap = new LinkedHashMap<>();
 
-        while (rs.next()){
-            String uuid = rs.getString("bapplicationnumber");
-            BirthRegistrationApplication birthRegistrationApplication = birthRegistrationApplicationMap.get(uuid);
+        try {
+            while (rs.next()) {
+                String uuid = rs.getString("bapplicationnumber");
+                BirthRegistrationApplication birthRegistrationApplication = birthRegistrationApplicationMap.get(uuid);
 
-            if(birthRegistrationApplication == null) {
+                if (birthRegistrationApplication == null) {
+                    Long lastModifiedTime = rs.getLong("blastModifiedTime");
+                    if (rs.wasNull()) {
+                        lastModifiedTime = null;
+                    }
 
-                Long lastModifiedTime = rs.getLong("blastModifiedTime");
-                if (rs.wasNull()) {
-                    lastModifiedTime = null;
+                    User father = User.builder().uuid(rs.getString("bfatherid")).build();
+                    User mother = User.builder().uuid(rs.getString("bmotherid")).build();
+
+                    AuditDetails auditdetails = AuditDetails.builder()
+                            .createdBy(rs.getString("bcreatedBy"))
+                            .createdTime(rs.getLong("bcreatedTime"))
+                            .lastModifiedBy(rs.getString("blastModifiedBy"))
+                            .lastModifiedTime(lastModifiedTime)
+                            .build();
+
+                    birthRegistrationApplication = BirthRegistrationApplication.builder()
+                            .applicationNumber(rs.getString("bapplicationnumber"))
+                            .tenantId(rs.getString("btenantid"))
+                            .id(rs.getString("bid"))
+                            .babyFirstName(rs.getString("bbabyfirstname"))
+                            .babyLastName(rs.getString("bbabylastname"))
+                            .father(father)
+                            .mother(mother)
+                            .doctorName(rs.getString("bdoctorname"))
+                            .hospitalName(rs.getString("bhospitalname"))
+                            .placeOfBirth(rs.getString("bplaceofbirth"))
+                            .timeOfBirth(rs.getInt("btimeofbirth"))
+                            .auditDetails(auditdetails)
+                            .build();
                 }
-
-
-                User father = User.builder().uuid(rs.getString("bfatherid")).build();
-                User mother = User.builder().uuid(rs.getString("bmotherid")).build();
-
-                AuditDetails auditdetails = AuditDetails.builder()
-                        .createdBy(rs.getString("bcreatedBy"))
-                        .createdTime(rs.getLong("bcreatedTime"))
-                        .lastModifiedBy(rs.getString("blastModifiedBy"))
-                        .lastModifiedTime(lastModifiedTime)
-                        .build();
-
-                birthRegistrationApplication = BirthRegistrationApplication.builder()
-                        .applicationNumber(rs.getString("bapplicationnumber"))
-                        .tenantId(rs.getString("btenantid"))
-                        .id(rs.getString("bid"))
-                        .babyFirstName(rs.getString("bbabyfirstname"))
-                        .babyLastName(rs.getString("bbabylastname"))
-                        .father(father)
-                        .mother(mother)
-                        .doctorName(rs.getString("bdoctorname"))
-                        .hospitalName(rs.getString("bhospitalname"))
-                        .placeOfBirth(rs.getString("bplaceofbirth"))
-                        .timeOfBirth(rs.getInt("btimeofbirth"))
-                        .auditDetails(auditdetails)
-                        .build();
+                addChildrenToProperty(rs, birthRegistrationApplication);
+                birthRegistrationApplicationMap.put(uuid, birthRegistrationApplication);
             }
-            addChildrenToProperty(rs, birthRegistrationApplication);
-            birthRegistrationApplicationMap.put(uuid, birthRegistrationApplication);
+        } catch (SQLException e) {
+            log.error("Error occurred while processing ResultSet: {}", e.getMessage());
+            throw new RuntimeException("Error occurred while processing ResultSet", e);
         }
+
         return new ArrayList<>(birthRegistrationApplicationMap.values());
     }
 
-    private void addChildrenToProperty(ResultSet rs, BirthRegistrationApplication birthRegistrationApplication)
-            throws SQLException {
-        addAddressToApplication(rs, birthRegistrationApplication);
+    private void addChildrenToProperty(ResultSet rs, BirthRegistrationApplication birthRegistrationApplication) {
+        try {
+            addAddressToApplication(rs, birthRegistrationApplication);
+        } catch (SQLException e) {
+            log.error("Error occurred while adding address to application: {}", e.getMessage());
+            throw new RuntimeException("Error occurred while adding address to application", e);
+        }
     }
 
     private void addAddressToApplication(ResultSet rs, BirthRegistrationApplication birthRegistrationApplication) throws SQLException {
@@ -94,7 +103,5 @@ public class BirthApplicationRowMapper implements ResultSetExtractor<List<BirthR
                 .build();
 
         birthRegistrationApplication.setAddress(baa);
-
     }
-
 }

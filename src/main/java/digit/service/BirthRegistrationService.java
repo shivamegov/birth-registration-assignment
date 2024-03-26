@@ -1,12 +1,10 @@
 package digit.service;
 
-
 import digit.enrichment.BirthApplicationEnrichment;
 import digit.kafka.Producer;
 import digit.repository.BirthRegistrationRepository;
 import digit.validators.BirthApplicationValidator;
 import digit.web.models.*;
-//import digit.web.models.FatherApplicant;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,64 +38,67 @@ public class BirthRegistrationService {
     private Producer producer;
 
     public List<BirthRegistrationApplication> registerBtRequest(BirthRegistrationRequest birthRegistrationRequest) {
-        // Validate applications
-        validator.validateBirthApplication(birthRegistrationRequest);
+        try {
+            // Validate applications
+            validator.validateBirthApplication(birthRegistrationRequest);
 
-        // Enrich applications
-        enrichmentUtil.enrichBirthApplication(birthRegistrationRequest);
+            // Enrich applications
+            enrichmentUtil.enrichBirthApplication(birthRegistrationRequest);
 
-        // Enrich/Upsert user in upon birth registration
-         userService.callUserService(birthRegistrationRequest);
+            // Enrich/Upsert user in upon birth registration
+            userService.callUserService(birthRegistrationRequest);
 
-        // Initiate workflow for the new application-
-      //  workflowService.updateWorkflowStatus(birthRegistrationRequest);
+            // Initiate workflow for the new application
+            // workflowService.updateWorkflowStatus(birthRegistrationRequest);
 
-        // Push the application to the topic for persister to listen and persist
-        producer.push("save-bt-application", birthRegistrationRequest);
+            // Push the application to the topic for persister to listen and persist
+            producer.push("save-bt-application", birthRegistrationRequest);
 
-        // Return the response back to user
-        return birthRegistrationRequest.getBirthRegistrationApplications();
+            // Return the response back to user
+            return birthRegistrationRequest.getBirthRegistrationApplications();
+        } catch (Exception e) {
+            log.error("Error occurred while registering birth request: {}", e.getMessage());
+            throw new RuntimeException("Error occurred while registering birth request");
+        }
     }
 
     public List<BirthRegistrationApplication> searchBtApplications(RequestInfo requestInfo, BirthApplicationSearchCriteria birthApplicationSearchCriteria) {
-        // Fetch applications from database according to the given search criteria
-        List<BirthRegistrationApplication> applications = birthRegistrationRepository.getApplications(birthApplicationSearchCriteria);
+        try {
+            // Fetch applications from database according to the given search criteria
+            List<BirthRegistrationApplication> applications = birthRegistrationRepository.getApplications(birthApplicationSearchCriteria);
 
-        // If no applications are found matching the given criteria, return an empty list
-        if(CollectionUtils.isEmpty(applications))
-            return new ArrayList<>();
+            // If no applications are found matching the given criteria, return an empty list
+            if (CollectionUtils.isEmpty(applications))
+                return new ArrayList<>();
 
-        // Enrich mother and father of applicant objects
-//        applications.forEach(application -> {
-//            enrichmentUtil.enrichFatherApplicantOnSearch(application);
-//            enrichmentUtil.enrichMotherApplicantOnSearch(application);
-//        });
-
-        //WORKFLOW INTEGRATION
-//        applications.forEach(application -> {
-//            ProcessInstance process = workflowService.getCurrentWorkflow(requestInfo, application.getTenantId(), "BTR");
-//            application.setWorkflow(Workflow.builder().status(process.getState().getState()).build());
-//        });
-
-        // Otherwise return the found applications
-        return applications;
+            // Otherwise return the found applications
+            return applications;
+        } catch (Exception e) {
+            log.error("Error occurred while searching birth applications: {}", e.getMessage());
+            throw new RuntimeException("Error occurred while searching birth applications");
+        }
     }
 
     public BirthRegistrationApplication updateBtApplication(BirthRegistrationRequest birthRegistrationRequest) {
-        // Validate whether the application that is being requested for update indeed exists
-        BirthRegistrationApplication existingApplication = validator.validateApplicationExistence(birthRegistrationRequest.getBirthRegistrationApplications().get(0));
-        existingApplication.setWorkflow(birthRegistrationRequest.getBirthRegistrationApplications().get(0).getWorkflow());
-        log.info(existingApplication.toString());
-        birthRegistrationRequest.setBirthRegistrationApplications(Collections.singletonList(existingApplication));
+        try {
+            // Validate whether the application that is being requested for update indeed exists
+            BirthRegistrationApplication existingApplication = validator.validateApplicationExistence(birthRegistrationRequest.getBirthRegistrationApplications().get(0));
+            existingApplication.setWorkflow(birthRegistrationRequest.getBirthRegistrationApplications().get(0).getWorkflow());
+            log.info(existingApplication.toString());
+            birthRegistrationRequest.setBirthRegistrationApplications(Collections.singletonList(existingApplication));
 
-        // Enrich application upon update
-        enrichmentUtil.enrichBirthApplicationUponUpdate(birthRegistrationRequest);
+            // Enrich application upon update
+            enrichmentUtil.enrichBirthApplicationUponUpdate(birthRegistrationRequest);
 
-        //workflowService.updateWorkflowStatus(birthRegistrationRequest);
+            //workflowService.updateWorkflowStatus(birthRegistrationRequest);
 
-        // Just like create request, update request will be handled asynchronously by the persister
-        producer.push("update-bt-application", birthRegistrationRequest);
+            // Just like create request, update request will be handled asynchronously by the persister
+            producer.push("update-bt-application", birthRegistrationRequest);
 
-        return birthRegistrationRequest.getBirthRegistrationApplications().get(0);
+            return birthRegistrationRequest.getBirthRegistrationApplications().get(0);
+        } catch (Exception e) {
+            log.error("Error occurred while updating birth application: {}", e.getMessage());
+            throw new RuntimeException("Error occurred while updating birth application");
+        }
     }
 }

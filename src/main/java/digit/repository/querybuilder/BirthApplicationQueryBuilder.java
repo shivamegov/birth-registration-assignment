@@ -18,42 +18,48 @@ public class BirthApplicationQueryBuilder {
 
     private final String ORDERBY_CREATEDTIME = " ORDER BY btr.createdtime DESC ";
 
-    public String getBirthApplicationSearchQuery(BirthApplicationSearchCriteria criteria, List<Object> preparedStmtList){
+    public String getBirthApplicationSearchQuery(BirthApplicationSearchCriteria criteria, List<Object> preparedStmtList) {
         StringBuilder query = new StringBuilder(BASE_BTR_QUERY);
         query.append(ADDRESS_SELECT_QUERY);
         query.append(FROM_TABLES);
 
-        if(!ObjectUtils.isEmpty(criteria.getTenantId())){
-            addClauseIfRequired(query, preparedStmtList);
-            query.append(" btr.tenantid = ? ");
-            preparedStmtList.add(criteria.getTenantId());
-        }
-        if(!ObjectUtils.isEmpty(criteria.getStatus())){
-            addClauseIfRequired(query, preparedStmtList);
-            query.append(" btr.status = ? ");
-            preparedStmtList.add(criteria.getStatus());
-        }
-        if(!CollectionUtils.isEmpty(criteria.getIds())){
-            addClauseIfRequired(query, preparedStmtList);
-            query.append(" btr.id IN ( ").append(createQuery(criteria.getIds())).append(" ) ");
-            addToPreparedStatement(preparedStmtList, criteria.getIds());
-        }
-        if(!ObjectUtils.isEmpty(criteria.getApplicationNumber())){
-            addClauseIfRequired(query, preparedStmtList);
-            query.append(" btr.applicationnumber = ? ");
-            preparedStmtList.add(criteria.getApplicationNumber());
-        }
+        try {
+            if (!ObjectUtils.isEmpty(criteria.getTenantId())) {
+                addClauseIfRequired(query, preparedStmtList);
+                query.append(" btr.tenantid = ? ");
+                preparedStmtList.add(criteria.getTenantId());
+            }
+            if (!ObjectUtils.isEmpty(criteria.getStatus())) {
+                addClauseIfRequired(query, preparedStmtList);
+                query.append(" btr.status = ? ");
+                preparedStmtList.add(criteria.getStatus());
+            }
+            if (!CollectionUtils.isEmpty(criteria.getIds())) {
+                addClauseIfRequired(query, preparedStmtList);
+                query.append(" btr.id IN ( ").append(createQuery(criteria.getIds())).append(" ) ");
+                addToPreparedStatement(preparedStmtList, criteria.getIds());
+            }
+            if (!ObjectUtils.isEmpty(criteria.getApplicationNumber())) {
+                addClauseIfRequired(query, preparedStmtList);
+                query.append(" btr.applicationnumber = ? ");
+                preparedStmtList.add(criteria.getApplicationNumber());
+            }
 
-        // order birth registration applications based on their createdtime in latest first manner
-        query.append(ORDERBY_CREATEDTIME);
+            // order birth registration applications based on their createdtime in latest first manner
+            query.append(ORDERBY_CREATEDTIME);
 
-        return query.toString();
+            return query.toString();
+        } catch (Exception e) {
+            // Log the error or handle it as appropriate
+            // For example: logger.error("Error occurred while building the query", e);
+            throw new IllegalArgumentException("Error occurred while building the query", e);
+        }
     }
 
-    private void addClauseIfRequired(StringBuilder query, List<Object> preparedStmtList){
-        if(preparedStmtList.isEmpty()){
+    private void addClauseIfRequired(StringBuilder query, List<Object> preparedStmtList) {
+        if (preparedStmtList.isEmpty()) {
             query.append(" WHERE ");
-        }else{
+        } else {
             query.append(" AND ");
         }
     }
@@ -70,8 +76,6 @@ public class BirthApplicationQueryBuilder {
     }
 
     private void addToPreparedStatement(List<Object> preparedStmtList, List<String> ids) {
-        ids.forEach(id -> {
-            preparedStmtList.add(id);
-        });
+        ids.forEach(preparedStmtList::add);
     }
 }

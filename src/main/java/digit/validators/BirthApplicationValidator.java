@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
+import java.util.List;
+
 @Component
 public class BirthApplicationValidator {
 
@@ -16,13 +18,32 @@ public class BirthApplicationValidator {
     private BirthRegistrationRepository repository;
 
     public void validateBirthApplication(BirthRegistrationRequest birthRegistrationRequest) {
-        birthRegistrationRequest.getBirthRegistrationApplications().forEach(application -> {
-            if(ObjectUtils.isEmpty(application.getTenantId()))
+        if (birthRegistrationRequest == null || birthRegistrationRequest.getBirthRegistrationApplications() == null) {
+            throw new IllegalArgumentException("Birth registration request or its applications cannot be null");
+        }
+
+        List<BirthRegistrationApplication> applications = birthRegistrationRequest.getBirthRegistrationApplications();
+
+        for (BirthRegistrationApplication application : applications) {
+            if (ObjectUtils.isEmpty(application.getTenantId())) {
                 throw new CustomException("EG_BT_APP_ERR", "tenantId is mandatory for creating birth registration applications");
-        });
+            }
+        }
     }
 
     public BirthRegistrationApplication validateApplicationExistence(BirthRegistrationApplication birthRegistrationApplication) {
-        return repository.getApplications(BirthApplicationSearchCriteria.builder().applicationNumber(birthRegistrationApplication.getApplicationNumber()).build()).get(0);
+        if (birthRegistrationApplication == null || birthRegistrationApplication.getApplicationNumber() == null) {
+            throw new IllegalArgumentException("Birth registration application or its number cannot be null");
+        }
+
+        List<BirthRegistrationApplication> applications = repository.getApplications(
+                BirthApplicationSearchCriteria.builder().applicationNumber(birthRegistrationApplication.getApplicationNumber()).build()
+        );
+
+        if (applications.isEmpty()) {
+            throw new CustomException("EG_BT_APP_NOT_FOUND", "Birth registration application not found");
+        }
+
+        return applications.get(0);
     }
 }

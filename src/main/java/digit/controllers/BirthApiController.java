@@ -1,10 +1,9 @@
 package digit.controllers;
 
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import digit.service.BirthRegistrationService;
 import digit.util.ResponseInfoFactory;
 import digit.web.models.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,57 +17,83 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import java.util.Collections;
+import java.util.List;
 
-    import javax.validation.constraints.*;
-    import javax.validation.Valid;
-    import javax.servlet.http.HttpServletRequest;
-        import java.util.Optional;
-@javax.annotation.Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2024-03-14T01:36:21.586087Z[Africa/Dakar]")
 @Controller
-    @RequestMapping("")
-    public class BirthApiController{
+@RequestMapping("")
+public class BirthApiController {
 
-        private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
+    private final HttpServletRequest request;
 
-        private final HttpServletRequest request;
+    @Autowired
+    private BirthRegistrationService birthRegistrationService;
 
-        @Autowired
-        private BirthRegistrationService birthRegistrationService;
+    @Autowired
+    private ResponseInfoFactory responseInfoFactory;
 
-        @Autowired
-        private ResponseInfoFactory responseInfoFactory;
-
-        @Autowired
-        public BirthApiController(ObjectMapper objectMapper, HttpServletRequest request) {
+    @Autowired
+    public BirthApiController(ObjectMapper objectMapper, HttpServletRequest request) {
         this.objectMapper = objectMapper;
         this.request = request;
+    }
+
+    @RequestMapping(value = "/birth/registration/v1/_create", method = RequestMethod.POST)
+    public ResponseEntity<BirthRegistrationResponse> birthRegistrationV1CreatePost(@Parameter(in = ParameterIn.DEFAULT, description = "Details for the new Birth Registration Application(s) + RequestInfo meta data.", required = true, schema = @Schema()) @Valid @RequestBody BirthRegistrationRequest body) {
+        try {
+            List<BirthRegistrationApplication> applications = birthRegistrationService.registerBtRequest(body);
+            ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(body.getRequestInfo(), true);
+            BirthRegistrationResponse response = BirthRegistrationResponse.builder().birthRegistrationApplications(applications).responseInfo(responseInfo).build();
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return handleException(e);
+        }
+    }
+
+    @RequestMapping(value = "/birth/registration/v1/_search", method = RequestMethod.POST)
+    public ResponseEntity<BirthRegistrationResponse> birthRegistrationV1SearchPost(@Parameter(in = ParameterIn.DEFAULT, description = "Parameter to carry Request metadata in the request body", schema = @Schema()) @RequestBody RequestInfoWrapper requestInfoWrapper, @Valid @ModelAttribute BirthApplicationSearchCriteria birthApplicationSearchCriteria) {
+        try {
+            List<BirthRegistrationApplication> applications = birthRegistrationService.searchBtApplications(requestInfoWrapper.getRequestInfo(), birthApplicationSearchCriteria);
+            ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(requestInfoWrapper.getRequestInfo(), true);
+            BirthRegistrationResponse response = BirthRegistrationResponse.builder().birthRegistrationApplications(applications).responseInfo(responseInfo).build();
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return handleException(e);
+        }
+    }
+
+    @RequestMapping(value = "/birth/registration/v1/_update", method = RequestMethod.POST)
+    public ResponseEntity<BirthRegistrationResponse> birthRegistrationV1UpdatePost(@Parameter(in = ParameterIn.DEFAULT, description = "Details for the new (s) + RequestInfo meta data.", required = true, schema = @Schema()) @Valid @RequestBody BirthRegistrationRequest body) {
+        try {
+            BirthRegistrationApplication application = birthRegistrationService.updateBtApplication(body);
+            ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(body.getRequestInfo(), true);
+            BirthRegistrationResponse response = BirthRegistrationResponse.builder().birthRegistrationApplications(Collections.singletonList(application)).responseInfo(responseInfo).build();
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return handleException(e);
+        }
+    }
+
+    private ResponseEntity<BirthRegistrationResponse> handleException(Exception e) {
+        // Log the error
+        Logger logger = LoggerFactory.getLogger(BirthApiController.class);
+        logger.error("Error occurred while processing request", e);
+
+        // Create error response
+        ResponseInfo errorResponseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(null, false);
+        BirthRegistrationResponse errorResponse = BirthRegistrationResponse.builder().responseInfo(errorResponseInfo).build();
+
+        // Determine HTTP status code based on exception type
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        if (e instanceof IllegalArgumentException) {
+            // Handle your specific exception
+            status = HttpStatus.BAD_REQUEST;
         }
 
-                @RequestMapping(value="/birth/registration/v1/_create", method = RequestMethod.POST)
-                public ResponseEntity<BirthRegistrationResponse> birthRegistrationV1CreatePost(@Parameter(in = ParameterIn.DEFAULT, description = "Details for the new Birth Registration Application(s) + RequestInfo meta data.", required=true, schema=@Schema()) @Valid @RequestBody BirthRegistrationRequest body) {
-                    List<BirthRegistrationApplication> applications = birthRegistrationService.registerBtRequest(body);
-                    ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(body.getRequestInfo(), true);
-                    BirthRegistrationResponse response = BirthRegistrationResponse.builder().birthRegistrationApplications(applications).responseInfo(responseInfo).build();
-                    return new ResponseEntity<>(response, HttpStatus.OK);
-                }
-
-                @RequestMapping(value="/birth/registration/v1/_search", method = RequestMethod.POST)
-                public ResponseEntity<BirthRegistrationResponse> birthRegistrationV1SearchPost(@Parameter(in = ParameterIn.DEFAULT, description = "Parameter to carry Request metadata in the request body", schema=@Schema()) @RequestBody RequestInfoWrapper requestInfoWrapper, @Valid @ModelAttribute BirthApplicationSearchCriteria birthApplicationSearchCriteria) {
-                    List<BirthRegistrationApplication> applications = birthRegistrationService.searchBtApplications(requestInfoWrapper.getRequestInfo(), birthApplicationSearchCriteria);
-                    ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(requestInfoWrapper.getRequestInfo(), true);
-                    BirthRegistrationResponse response = BirthRegistrationResponse.builder().birthRegistrationApplications(applications).responseInfo(responseInfo).build();
-                    return new ResponseEntity<>(response,HttpStatus.OK);
-                }
-
-                @RequestMapping(value="/birth/registration/v1/_update", method = RequestMethod.POST)
-                public ResponseEntity<BirthRegistrationResponse> birthRegistrationV1UpdatePost(@Parameter(in = ParameterIn.DEFAULT, description = "Details for the new (s) + RequestInfo meta data.", required=true, schema=@Schema()) @Valid @RequestBody BirthRegistrationRequest body) {
-                    BirthRegistrationApplication application = birthRegistrationService.updateBtApplication(body);
-
-                    ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(body.getRequestInfo(), true);
-                    BirthRegistrationResponse response = BirthRegistrationResponse.builder().birthRegistrationApplications(Collections.singletonList(application)).responseInfo(responseInfo).build();
-                    return new ResponseEntity<>(response, HttpStatus.OK);
-                }
-
-        }
+        // Return error response with appropriate status code
+        return new ResponseEntity<>(errorResponse, status);
+    }
+}
