@@ -1,19 +1,16 @@
 package digit.web.models;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import digit.web.models.AuditDetails;
-import digit.web.models.BirthApplicationAddress;
-import digit.web.models.Workflow;
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.springframework.validation.annotation.Validated;
-import javax.validation.Valid;
-import javax.validation.constraints.*;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.Data;
 import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.validation.annotation.Validated;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
  * A Object holds the basic data for a Birth Registration Application
@@ -25,74 +22,82 @@ import lombok.Builder;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class BirthRegistrationApplication   {
-        @JsonProperty("id")
+public class BirthRegistrationApplication {
+    @JsonProperty("id")
 
-        @Size(min=2,max=64)         private String id = null;
+    @Size(min = 2, max = 64)
+    private String id = null;
 
-        @JsonProperty("tenantId")
-          @NotNull
+    @JsonProperty("tenantId")
+    @NotNull
 
-        @Size(min=2,max=128)         private String tenantId = null;
+    @Size(min = 2, max = 128)
+    private String tenantId = null;
 
-        @JsonProperty("applicationNumber")
+    @JsonProperty("applicationNumber")
 
-        @Size(min=2,max=128)         private String applicationNumber = null;
+    @Size(min = 2, max = 128)
+    private String applicationNumber = null;
 
-        @JsonProperty("babyFirstName")
-          @NotNull
+    @JsonProperty("babyFirstName")
+    @NotNull
 
-        @Size(min=2,max=128)         private String babyFirstName = null;
+    @Size(min = 2, max = 128)
+    private String babyFirstName = null;
 
-        @JsonProperty("babyLastName")
+    @JsonProperty("babyLastName")
 
-        @Size(min=2,max=128)         private String babyLastName = null;
+    @Size(min = 2, max = 128)
+    private String babyLastName = null;
 
-        @JsonProperty("fatherOfApplicant")
-          @NotNull
+    @JsonProperty("fatherOfApplicant")
+    @NotNull
 
-          @Valid
-                private User father = null;
+    @Valid
+    private User father = null;
 
-        @JsonProperty("motherOfApplicant")
-          @NotNull
+    @JsonProperty("motherOfApplicant")
+    @NotNull
 
-          @Valid
-                private User mother = null;
+    @Valid
+    private User mother = null;
 
-        @JsonProperty("doctorName")
-          @NotNull
+    @JsonProperty("doctorName")
+    @NotNull
 
-        @Size(min=2,max=128)         private String doctorName = null;
+    @Size(min = 2, max = 128)
+    private String doctorName = null;
 
-        @JsonProperty("hospitalName")
-          @NotNull
+    @JsonProperty("hospitalName")
+    @NotNull
 
-        @Size(min=2,max=128)         private String hospitalName = null;
+    @Size(min = 2, max = 128)
+    private String hospitalName = null;
 
-        @JsonProperty("placeOfBirth")
-          @NotNull
+    @JsonProperty("placeOfBirth")
+    @NotNull
 
-        @Size(min=2,max=128)         private String placeOfBirth = null;
+    @Size(min = 2, max = 128)
+    private String placeOfBirth = null;
 
-        @JsonProperty("timeOfBirth")
+    @JsonProperty("timeOfBirth")
 
-                private Integer timeOfBirth = null;
+    private Integer timeOfBirth = null;
 
-        @JsonProperty("address")
+    @JsonProperty("address")
 
-          @Valid
-                private BirthApplicationAddress address = null;
+    @Valid
+    private BirthApplicationAddress address = null;
 
-        @JsonProperty("workflow")
+    @JsonProperty("workflow")
 
-          @Valid
-                private Workflow workflow = null;
+    @Valid
+    private Workflow workflow = null;
 
-        @JsonProperty("auditDetails")
+    @JsonProperty("auditDetails")
 
-          @Valid
-                private AuditDetails auditDetails = null;
+    @Valid
+    private AuditDetails auditDetails = null;
 
 
 }

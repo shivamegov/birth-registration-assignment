@@ -6,6 +6,7 @@ import digit.web.models.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import java.util.ArrayList;
 
 import java.util.List;
 import java.util.UUID;
@@ -67,6 +68,32 @@ public class BirthApplicationEnrichment {
         }
     }
 
+        private digit.web.models.User convertToNewUser(org.egov.common.contract.request.User oldUser) {
+            digit.web.models.User newUser = new digit.web.models.User();
+
+            // Copying fields from oldUser to newUser
+            newUser.setTenantId(oldUser.getTenantId());
+            newUser.setId(oldUser.getId() != null ? Math.toIntExact(oldUser.getId()) : null);
+            newUser.setUuid(oldUser.getUuid());
+            newUser.setUserName(oldUser.getUserName());
+            newUser.setMobileNumber(oldUser.getMobileNumber());
+            newUser.setEmailId(oldUser.getEmailId());
+
+            // Converting roles
+            List<Role> roles = new ArrayList<>();
+            oldUser.getRoles().forEach(oldRole -> {
+                Role newRole = new Role();
+                newRole.setName(oldRole.getName());
+                roles.add(newRole);
+            });
+            newUser.setRoles(roles);
+
+            newUser.setName(oldUser.getName());
+            newUser.setType(oldUser.getType());
+
+            return newUser;
+        }
+
     public void enrichFatherApplicantOnSearch(BirthRegistrationApplication application) {
         UserDetailResponse fatherUserResponse = userService.searchUser(userUtils.getStateLevelTenant(application.getTenantId()),application.getFather().getUuid() ,null);
         User fatherUser = fatherUserResponse.getUser().get(0);
@@ -86,7 +113,7 @@ public class BirthApplicationEnrichment {
                 .name(fatherUser.getName())
                 .type(fatherUser.getType())
                 .roles(fatherUser.getRoles()).build();
-//        application.setFather(fatherApplicant);
+        application.setFather(convertToNewUser(fatherApplicant));
     }
 
     public void enrichMotherApplicantOnSearch(BirthRegistrationApplication application) {
@@ -107,6 +134,6 @@ public class BirthApplicationEnrichment {
                 .name(motherUser.getName())
                 .type(motherUser.getType())
                 .roles(motherUser.getRoles()).build();
-//        application.setMother(motherApplicant);
+        application.setMother(convertToNewUser(motherApplicant));
     }
 }

@@ -89,7 +89,7 @@ public class WorkflowService {
     public ProcessInstance getCurrentWorkflow(RequestInfo requestInfo, String tenantId, String businessId) {
         try {
             RequestInfoWrapper requestInfoWrapper = RequestInfoWrapper.builder().requestInfo(requestInfo).build();
-            StringBuilder url = getSearchURLWithParams(tenantId, businessId);
+            StringBuilder url = getSearchURLForProcessInstanceWithParams(tenantId, businessId);
             Object res = repository.fetchResult(url, requestInfoWrapper);
             ProcessInstanceResponse response = mapper.convertValue(res, ProcessInstanceResponse.class);
             if (response != null && !CollectionUtils.isEmpty(response.getProcessInstances()) && response.getProcessInstances().get(0) != null)
@@ -122,6 +122,13 @@ public class WorkflowService {
         url.append(config.getWfBusinessServiceSearchPath());
         url.append("?tenantId=").append(tenantId);
         url.append("&businessServices=").append(businessService);
+        return url;
+    }
+    private StringBuilder getSearchURLForProcessInstanceWithParams(String tenantId, String businessService) {
+        StringBuilder url = new StringBuilder(config.getWfHost());
+        url.append(config.getWfProcessInstanceSearchPath());
+        url.append("?tenantId=").append(tenantId);
+        url.append("&businessIds=").append(businessService);
         return url;
     }
 

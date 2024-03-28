@@ -1,17 +1,16 @@
 package digit.web.models;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import digit.web.models.User;
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.springframework.validation.annotation.Validated;
-import javax.validation.Valid;
-import javax.validation.constraints.*;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.Data;
 import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.validation.annotation.Validated;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
  * RequestInfo should be used to carry meta information about the requests to the server as described in the fields below. All eGov APIs will use requestinfo as a part of the request body to carry this meta information. Some of this information will be returned back from the server as part of the ResponseInfo in the response body to ensure correlation.
@@ -23,56 +22,63 @@ import lombok.Builder;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class RequestInfo   {
-        @JsonProperty("apiId")
-          @NotNull
+public class RequestInfo {
+    @JsonProperty("apiId")
+    @NotNull
 
-        @Size(max=128)         private String apiId = null;
+    @Size(max = 128)
+    private String apiId = null;
 
-        @JsonProperty("ver")
-          @NotNull
+    @JsonProperty("ver")
+    @NotNull
 
-        @Size(max=32)         private String ver = null;
+    @Size(max = 32)
+    private String ver = null;
 
-        @JsonProperty("ts")
-          @NotNull
+    @JsonProperty("ts")
+    @NotNull
 
-                private Long ts = null;
+    private Long ts = null;
 
-        @JsonProperty("action")
-          @NotNull
+    @JsonProperty("action")
+    @NotNull
 
-        @Size(max=32)         private String action = null;
+    @Size(max = 32)
+    private String action = null;
 
-        @JsonProperty("did")
+    @JsonProperty("did")
 
-        @Size(max=1024)         private String did = null;
+    @Size(max = 1024)
+    private String did = null;
 
-        @JsonProperty("key")
+    @JsonProperty("key")
 
-        @Size(max=256)         private String key = null;
+    @Size(max = 256)
+    private String key = null;
 
-        @JsonProperty("msgId")
-          @NotNull
+    @JsonProperty("msgId")
+    @NotNull
 
-        @Size(max=256)         private String msgId = null;
+    @Size(max = 256)
+    private String msgId = null;
 
-        @JsonProperty("requesterId")
+    @JsonProperty("requesterId")
 
-        @Size(max=256)         private String requesterId = null;
+    @Size(max = 256)
+    private String requesterId = null;
 
-        @JsonProperty("authToken")
+    @JsonProperty("authToken")
 
-                private String authToken = null;
+    private String authToken = null;
 
-        @JsonProperty("userInfo")
+    @JsonProperty("userInfo")
 
-          @Valid
-                private User userInfo = null;
+    @Valid
+    private User userInfo = null;
 
-        @JsonProperty("correlationId")
+    @JsonProperty("correlationId")
 
-                private String correlationId = null;
+    private String correlationId = null;
 
 
 }
