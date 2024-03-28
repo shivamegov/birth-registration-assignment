@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import digit.web.models.AuditDetails;
 import digit.web.models.BirthApplicationAddress;
-import digit.web.models.User;
 import digit.web.models.Workflow;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.validation.annotation.Validated;

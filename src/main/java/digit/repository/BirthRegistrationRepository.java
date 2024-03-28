@@ -36,7 +36,7 @@ public class BirthRegistrationRepository {
             return jdbcTemplate.query(query, preparedStmtList.toArray(), rowMapper);
         } catch (DataAccessException e) {
             log.error("Error occurred while executing database query: {}", e.getMessage());
-            throw e; // Re-throw the exception to let the caller handle it
+            throw e;
         }
     }
 }

@@ -32,21 +32,16 @@ public class UserService {
 
     public void callUserService(BirthRegistrationRequest request) {
         request.getBirthRegistrationApplications().forEach(application -> {
-            if (!StringUtils.isEmpty(application.getFather().getId() + "")) {
-                // Do something
-            } else {
                 User user = createFatherUser(application);
-                application.getFather().setId(Integer.valueOf(upsertUser(user, request.getRequestInfo())));
-            }
+                application.getFather().setUuid((upsertUser(user, request.getRequestInfo())));
+
         });
 
         request.getBirthRegistrationApplications().forEach(application -> {
-            if (!StringUtils.isEmpty(application.getMother().getId() + "")) {
-                // Do something
-            } else {
+
                 User user = createMotherUser(application);
-                application.getMother().setId(Integer.valueOf(upsertUser(user, request.getRequestInfo())));
-            }
+                application.getMother().setUuid((upsertUser(user, request.getRequestInfo())));
+
         });
     }
 
@@ -82,24 +77,21 @@ public class UserService {
         String tenantId = user.getTenantId();
         org.egov.common.contract.request.User userServiceResponse = null;
 
-        try {
-            UserDetailResponse userDetailResponse = searchUser(userUtils.getStateLevelTenant(tenantId), null, user.getMobileNumber());
-            if (!userDetailResponse.getUser().isEmpty()) {
-                org.egov.common.contract.request.User userFromSearch = userDetailResponse.getUser().get(0);
-                if (!user.getUserName().equalsIgnoreCase(userFromSearch.getUserName())) {
-                    userServiceResponse = updateUser(requestInfo, user, userFromSearch);
-                } else {
-                    userServiceResponse = userFromSearch;
-                }
-            } else {
-                userServiceResponse = createUser(requestInfo, tenantId, user);
-            }
-        } catch (Exception e) {
-            log.error("Error occurred while upserting user: {}", e.getMessage());
-            throw new CustomException("USER_UPSERT_ERROR", "Failed to upsert user");
-        }
 
-        return userServiceResponse.getUuid();
+            UserDetailResponse userDetailResponse = searchUser(userUtils.getStateLevelTenant(tenantId), null, user.getMobileNumber());
+
+            //            if (!userDetailResponse.getUser().isEmpty()) {
+//                org.egov.common.contract.request.User userFromSearch = userDetailResponse.getUser().get(0);
+//                if (!user.getUserName().equalsIgnoreCase(userFromSearch.getUserName())) {
+//                    userServiceResponse = updateUser(requestInfo, user, userFromSearch);
+//                } else {
+//                    userServiceResponse = userFromSearch;
+//                }
+//            } else {
+//                userServiceResponse = createUser(requestInfo, tenantId, user);
+//            }
+
+        return userDetailResponse.getUser().get(0).getUuid();
     }
 
 

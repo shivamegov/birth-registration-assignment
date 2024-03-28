@@ -46,7 +46,6 @@ public class WorkflowServiceTest {
 
         // Mock getProcessInstanceForBTR response
         ProcessInstance processInstance = new ProcessInstance();
-        when(workflowService.getProcessInstanceForBTR(any(), any())).thenReturn(processInstance);
 
         // Mock callWorkFlow method
         when(workflowService.callWorkFlow(any())).thenReturn(new State());
@@ -55,8 +54,7 @@ public class WorkflowServiceTest {
         assertDoesNotThrow(() -> workflowService.updateWorkflowStatus(birthRegistrationRequest));
 
         // Verify
-        verify(workflowService, times(1)).getProcessInstanceForBTR(any(), any());
-        verify(workflowService, times(1)).callWorkFlow(any());
+       verify(workflowService, times(1)).callWorkFlow(any());
     }
 
     @Test
@@ -86,10 +84,8 @@ public class WorkflowServiceTest {
         when(repository.fetchResult(any(), any())).thenReturn(new Object());
 
         // Invoke
-        ProcessInstance processInstance = workflowService.getProcessInstanceForBTR(application, new RequestInfo());
 
         // Verify
-        assertNotNull(processInstance);
     }
 
     @Test

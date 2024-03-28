@@ -49,7 +49,7 @@ public class BirthRegistrationService {
             userService.callUserService(birthRegistrationRequest);
 
             // Initiate workflow for the new application
-            // workflowService.updateWorkflowStatus(birthRegistrationRequest);
+             workflowService.updateWorkflowStatus(birthRegistrationRequest);
 
             // Push the application to the topic for persister to listen and persist
             producer.push("save-bt-application", birthRegistrationRequest);
@@ -63,20 +63,26 @@ public class BirthRegistrationService {
     }
 
     public List<BirthRegistrationApplication> searchBtApplications(RequestInfo requestInfo, BirthApplicationSearchCriteria birthApplicationSearchCriteria) {
-        try {
-            // Fetch applications from database according to the given search criteria
-            List<BirthRegistrationApplication> applications = birthRegistrationRepository.getApplications(birthApplicationSearchCriteria);
+        // Fetch applications from database according to the given search criteria
+        List<BirthRegistrationApplication> applications = birthRegistrationRepository.getApplications(birthApplicationSearchCriteria);
 
-            // If no applications are found matching the given criteria, return an empty list
-            if (CollectionUtils.isEmpty(applications))
-                return new ArrayList<>();
+        // If no applications are found matching the given criteria, return an empty list
+        if(CollectionUtils.isEmpty(applications))
+            return new ArrayList<>();
 
-            // Otherwise return the found applications
-            return applications;
-        } catch (Exception e) {
-            log.error("Error occurred while searching birth applications: {}", e.getMessage());
-            throw new RuntimeException("Error occurred while searching birth applications");
-        }
+        // Enrich mother and father of applicant objects
+        applications.forEach(application -> {
+            enrichmentUtil.enrichFatherApplicantOnSearch(application);
+            enrichmentUtil.enrichMotherApplicantOnSearch(application);
+        });
+
+        //WORKFLOW INTEGRATION
+        applications.forEach(application -> {
+            application.setWorkflow(Workflow.builder().status(workflowService.getCurrentWorkflow(requestInfo, application.getTenantId(), application.getApplicationNumber()).getState().getState()).build());
+        });
+
+        // Otherwise, return the found applications
+        return applications;
     }
 
     public BirthRegistrationApplication updateBtApplication(BirthRegistrationRequest birthRegistrationRequest) {
@@ -90,7 +96,7 @@ public class BirthRegistrationService {
             // Enrich application upon update
             enrichmentUtil.enrichBirthApplicationUponUpdate(birthRegistrationRequest);
 
-            //workflowService.updateWorkflowStatus(birthRegistrationRequest);
+            workflowService.updateWorkflowStatus(birthRegistrationRequest);
 
             // Just like create request, update request will be handled asynchronously by the persister
             producer.push("update-bt-application", birthRegistrationRequest);
